@@ -16,6 +16,9 @@ Module.register("MMM-RingSnapshot", {
 		this.snapshots = {};
 		this.motionActive = {};
 		this.cameraList = [];
+		this.imageElements = {};
+		this.cardElements = {};
+		this.labelElements = {};
 		this.sendSocketNotification("START", this.config);
 	},
 
@@ -25,13 +28,33 @@ Module.register("MMM-RingSnapshot", {
 			this.updateDom(300);
 		} else if (notification === "SNAPSHOT") {
 			this.snapshots[payload.camera] = payload.url;
-			this.updateDom(300);
+			// Update image src directly if element exists, no DOM rebuild
+			if (this.imageElements[payload.camera]) {
+				this.imageElements[payload.camera].src = payload.url;
+			} else {
+				this.updateDom(300);
+			}
 		} else if (notification === "MOTION") {
 			this.motionActive[payload] = true;
-			this.updateDom(300);
+			// Update classes directly if elements exist
+			if (this.cardElements[payload]) {
+				this.cardElements[payload].classList.add("ring-motion");
+				this.labelElements[payload].innerHTML = "MOTION: " + payload;
+				this.labelElements[payload].classList.add("bright");
+				this.labelElements[payload].classList.remove("dimmed");
+			} else {
+				this.updateDom(300);
+			}
 		} else if (notification === "MOTION_CLEAR") {
 			this.motionActive[payload] = false;
-			this.updateDom(300);
+			if (this.cardElements[payload]) {
+				this.cardElements[payload].classList.remove("ring-motion");
+				this.labelElements[payload].innerHTML = payload;
+				this.labelElements[payload].classList.remove("bright");
+				this.labelElements[payload].classList.add("dimmed");
+			} else {
+				this.updateDom(300);
+			}
 		}
 	},
 
@@ -44,6 +67,10 @@ Module.register("MMM-RingSnapshot", {
 			return wrapper;
 		}
 
+		this.imageElements = {};
+		this.cardElements = {};
+		this.labelElements = {};
+
 		for (var i = 0; i < this.cameraList.length; i++) {
 			var camKey = this.cameraList[i];
 			var card = document.createElement("div");
@@ -52,6 +79,8 @@ Module.register("MMM-RingSnapshot", {
 			if (this.motionActive[camKey]) {
 				card.className += " ring-motion";
 			}
+
+			this.cardElements[camKey] = card;
 
 			var label = document.createElement("div");
 			label.className = "ring-label xsmall";
@@ -62,12 +91,14 @@ Module.register("MMM-RingSnapshot", {
 				label.innerHTML = camKey;
 				label.className += " dimmed";
 			}
+			this.labelElements[camKey] = label;
 			card.appendChild(label);
 
 			if (this.snapshots[camKey]) {
 				var img = document.createElement("img");
 				img.className = "ring-img";
 				img.src = this.snapshots[camKey];
+				this.imageElements[camKey] = img;
 				card.appendChild(img);
 			} else {
 				var placeholder = document.createElement("div");

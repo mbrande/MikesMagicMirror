@@ -12,6 +12,8 @@ module.exports = NodeHelper.create({
 	lastDingIds: {},
 	motionTimeouts: {},
 	motionRefreshIntervals: {},
+	motionDetectionTypes: {},
+	motionOriginalUrls: {},
 
 	start: function () {
 		console.log("[MMM-RingSnapshot] Node helper starting...");
@@ -153,8 +155,9 @@ module.exports = NodeHelper.create({
 		// Take a fresh snapshot
 		await this.takeSnapshot(camKey);
 
-		// Run detection if either person or vehicle detection is enabled
-		if (this.config.personDetection !== false || this.config.vehicleDetection !== false || this.config.animalDetection !== false) {
+		// Run detection if any detection type is enabled
+		var detectionEnabled = this.config.personDetection !== false || this.config.vehicleDetection !== false || this.config.animalDetection !== false;
+		if (detectionEnabled) {
 			var detection = await this.runDetection(camKey);
 			var personFound = this.config.personDetection !== false && detection.person;
 			var vehicleFound = this.config.vehicleDetection !== false && detection.vehicle;
@@ -163,6 +166,15 @@ module.exports = NodeHelper.create({
 				console.log("[MMM-RingSnapshot] No person/vehicle/animal detected on " + camKey + ", skipping alert");
 				return;
 			}
+
+			// Save which object types triggered and preserve the original detection snapshot
+			this.motionDetectionTypes[camKey] = { person: personFound, vehicle: vehicleFound, animal: animalFound };
+			var snapshotFile = "snapshot-" + camKey.toLowerCase().replace(/\s+/g, "-");
+			var currentPath = path.join(__dirname, snapshotFile + ".jpg");
+			var originalPath = path.join(__dirname, snapshotFile + "-motion.jpg");
+			fs.copyFileSync(currentPath, originalPath);
+			this.motionOriginalUrls[camKey] = "/modules/MMM-RingSnapshot/" + snapshotFile + "-motion.jpg?" + Date.now();
+			console.log("[MMM-RingSnapshot] Saved original detection snapshot for " + camKey);
 		}
 
 		// Notify frontend of motion
@@ -178,11 +190,19 @@ module.exports = NodeHelper.create({
 			clearInterval(this.motionRefreshIntervals[camKey]);
 		}
 
-		// Refresh snapshots every 5 seconds during motion to catch continued activity
+		// Refresh snapshots every 5 seconds during motion
 		var self = this;
-		this.motionRefreshIntervals[camKey] = setInterval(function () {
-			self.takeSnapshot(camKey);
-		}, 5000);
+		if (detectionEnabled) {
+			// With detection: check if object is still in frame before updating the displayed image
+			this.motionRefreshIntervals[camKey] = setInterval(function () {
+				self.refreshMotionSnapshot(camKey);
+			}, 5000);
+		} else {
+			// Without detection: simple refresh
+			this.motionRefreshIntervals[camKey] = setInterval(function () {
+				self.takeSnapshot(camKey);
+			}, 5000);
+		}
 
 		// Clear motion highlight and stop refresh after duration
 		this.motionTimeouts[camKey] = setTimeout(function () {
@@ -190,8 +210,44 @@ module.exports = NodeHelper.create({
 				clearInterval(self.motionRefreshIntervals[camKey]);
 				delete self.motionRefreshIntervals[camKey];
 			}
+			delete self.motionDetectionTypes[camKey];
+			delete self.motionOriginalUrls[camKey];
+			// Clean up the saved motion snapshot file
+			var motionFile = path.join(__dirname, "snapshot-" + camKey.toLowerCase().replace(/\s+/g, "-") + "-motion.jpg");
+			try { fs.unlinkSync(motionFile); } catch (e) { /* ignore */ }
 			self.sendSocketNotification("MOTION_CLEAR", camKey);
 		}, this.config.displayDuration || 30000);
+	},
+
+	refreshMotionSnapshot: async function (camKey) {
+		// Take a new snapshot silently (don't send to frontend yet)
+		var newUrl = await this.takeSnapshot(camKey, true);
+		if (!newUrl) return;
+
+		// Run detection on the new snapshot
+		var detection = await this.runDetection(camKey);
+		var types = this.motionDetectionTypes[camKey];
+		if (!types) {
+			// Motion was cleared while we were processing, just send the new snapshot
+			this.sendSocketNotification("SNAPSHOT", { camera: camKey, url: newUrl });
+			return;
+		}
+
+		// Check if any of the originally-detected object types are still in frame
+		var stillPresent = false;
+		if (types.person && detection.person) stillPresent = true;
+		if (types.vehicle && detection.vehicle) stillPresent = true;
+		if (types.animal && detection.animal) stillPresent = true;
+
+		if (stillPresent) {
+			// Object still visible — show the updated snapshot
+			console.log("[MMM-RingSnapshot] Object still in frame on " + camKey + ", showing updated snapshot");
+			this.sendSocketNotification("SNAPSHOT", { camera: camKey, url: newUrl });
+		} else {
+			// Object gone — fall back to the original detection snapshot
+			console.log("[MMM-RingSnapshot] Object no longer in frame on " + camKey + ", showing original detection snapshot");
+			this.sendSocketNotification("SNAPSHOT", { camera: camKey, url: this.motionOriginalUrls[camKey] });
+		}
 	},
 
 	runDetection: function (camKey) {
@@ -221,16 +277,20 @@ module.exports = NodeHelper.create({
 		});
 	},
 
-	takeSnapshot: async function (camKey) {
+	takeSnapshot: async function (camKey, silent) {
 		try {
 			var snapshot = await this.cameras[camKey].getSnapshot();
 			var snapshotPath = path.join(__dirname, "snapshot-" + camKey.toLowerCase().replace(/\s+/g, "-") + ".jpg");
 			fs.writeFileSync(snapshotPath, snapshot);
 			var url = "/modules/MMM-RingSnapshot/snapshot-" + camKey.toLowerCase().replace(/\s+/g, "-") + ".jpg?" + Date.now();
-			this.sendSocketNotification("SNAPSHOT", { camera: camKey, url: url });
+			if (!silent) {
+				this.sendSocketNotification("SNAPSHOT", { camera: camKey, url: url });
+			}
 			console.log("[MMM-RingSnapshot] Snapshot saved for " + camKey + " (" + snapshot.length + " bytes)");
+			return url;
 		} catch (err) {
 			console.error("[MMM-RingSnapshot] Snapshot error (" + camKey + "):", err.message);
+			return null;
 		}
 	},
 

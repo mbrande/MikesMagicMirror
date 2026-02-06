@@ -1,0 +1,104 @@
+/* Custom CSS for Waveshare 11.9" bar display (1480x320 effective resolution) */
+
+/* Fix MMM-pages hidden modules not fully hiding */
+.module.hidden {
+  display: none !important;
+}
+
+:root {
+  --font-size: 24px;
+  --font-size-xsmall: 0.75rem;
+  --font-size-small: 1rem;
+  --font-size-medium: 1.5rem;
+  --font-size-large: 3rem;
+  --font-size-xlarge: 3.5rem;
+
+  --gap-body-top: 10px;
+  --gap-body-right: 15px;
+  --gap-body-bottom: 10px;
+  --gap-body-left: 15px;
+
+  --gap-modules: 5px;
+}
+
+body {
+  line-height: 1.3;
+}
+
+header {
+  line-height: 12px;
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+}
+
+.module {
+  margin-bottom: 5px;
+}
+
+.region.bottom .module {
+  margin-top: 5px;
+  margin-bottom: 0;
+}
+
+/* Larger clock */
+.module.clock .time {
+  font-size: 3.8rem;
+  line-height: 1;
+}
+
+.module.clock .period {
+  font-size: 1.5rem;
+}
+
+.module.clock .date {
+  font-size: 1.2rem;
+}
+
+/* Compact right side - stack outdoor weather + indoor sensor */
+.region.top.right {
+  max-width: 35%;
+}
+
+.region.top.right .module.weather {
+  margin-bottom: 8px;
+}
+
+.region.top.right .module.weather .large {
+  font-size: 2rem;
+}
+
+.region.top.right .module.weather .small {
+  font-size: 0.7rem;
+}
+
+.dht-temp.large {
+  font-size: 2rem !important;
+  line-height: 1;
+}
+
+.dht-humidity {
+  font-size: 0.7rem !important;
+}
+
+/* Calendar bottom bar - compact and centered */
+.region.bar .module.calendar table {
+  width: auto;
+  margin: 0 auto;
+}
+
+.region.bar .module.calendar {
+  text-align: center;
+}
+
+/* Burn-in prevention: subtle pixel shift every 60s */
+@keyframes pixel-shift {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(3px, -2px); }
+  50%  { transform: translate(-2px, 3px); }
+  75%  { transform: translate(2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+body {
+  animation: pixel-shift 240s ease-in-out infinite;
+}

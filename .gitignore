@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Secrets - NEVER commit these
+config/config.js
+modules/MMM-RingSnapshot/ring-token.json
+
+# MMM-RingSnapshot generated files
+modules/MMM-RingSnapshot/venv/
+modules/MMM-RingSnapshot/model/
+modules/MMM-RingSnapshot/snapshot-*.jpg
+modules/MMM-RingSnapshot/snapshot.jpg
+
+# Core dumps
+core.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+.directory
+
+# IDE
+.vscode/
+.idea/
+
+# Vim swap
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.orig
+*.rej
+*.bak

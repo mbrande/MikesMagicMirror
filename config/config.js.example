@@ -1,0 +1,182 @@
+/* Config Example
+ *
+ * Copy this file to config.js and fill in your values.
+ *
+ * For more information on how you can configure this file
+ * see https://docs.magicmirror.builders/configuration/introduction.html
+ * and https://docs.magicmirror.builders/modules/configuration.html
+ */
+let config = {
+	address: "0.0.0.0",
+	port: 8080,
+	basePath: "/",
+	ipWhitelist: [],
+
+	useHttps: false,
+	httpsPrivateKey: "",
+	httpsCertificate: "",
+
+	language: "en",
+	locale: "en-US",
+
+	logLevel: ["INFO", "LOG", "WARN", "ERROR"],
+	timeFormat: 12,
+	units: "imperial",
+	electronSwitches: ["enable-touch-events"],
+
+	modules: [
+		{
+			module: "alert",
+		},
+		{
+			module: "MMM-Remote-Control",
+			config: {
+				apiKey: "YOUR_API_KEY_HERE",
+				customCommand: {
+					monitorOnCommand: "wlr-randr --output HDMI-A-1 --on",
+					monitorOffCommand: "wlr-randr --output HDMI-A-1 --off",
+					monitorStatusCommand: "wlr-randr | grep -A1 HDMI-A-1 | grep Enabled"
+				}
+			}
+		},
+		// Page management
+		{
+			module: "MMM-pages",
+			config: {
+				modules: [
+					["clock", "MMM-RingSnapshot", "weather", "MMM-DHT-Sensor", "calendar"],
+					["newsfeed", "MMM-SystemStats"]
+				],
+				fixed: ["MMM-page-indicator", "MMM-Touch"],
+				animationTime: 500,
+				useLockString: false
+			}
+		},
+		{
+			module: "MMM-page-indicator",
+			position: "bottom_bar"
+		},
+		{
+			module: "MMM-Touch",
+			position: "bottom_center",
+			config: {
+				debug: false,
+				useDisplay: false,
+				threshold: {
+					moment_ms: 500,
+					press_ms: 1000,
+					move_px: 50,
+					pinch_px: 50,
+					rotate_dg: 20,
+					idle_ms: 30000
+				},
+				gestureCommands: {
+					"default": {
+						"TAP_1": (commander) => { commander.sendNotification("PAGE_INCREMENT"); }
+					}
+				}
+			}
+		},
+		// Page 1: Dashboard
+		{
+			module: "clock",
+			position: "top_left"
+		},
+		{
+			module: "MMM-RingSnapshot",
+			position: "top_center",
+			config: {
+				cameras: ["Front Door", "Driveway"],
+				displayDuration: 30000,
+				pollInterval: 15000,
+				snapshotInterval: 300000,
+				personDetection: true,
+				personConfidence: 0.5,
+				vehicleDetection: true,
+				vehicleConfidence: 0.5,
+				animalDetection: true,
+				animalConfidence: 0.5
+			}
+		},
+		{
+			module: "weather",
+			position: "top_right",
+			config: {
+				weatherProvider: "openmeteo",
+				type: "current",
+				lat: 0.0000,
+				lon: 0.0000
+			}
+		},
+		{
+			module: "MMM-DHT-Sensor",
+			header: "Indoor",
+			position: "top_right",
+			config: {
+				updateInterval: 10000,
+				showHumidity: true,
+				useFahrenheit: true
+			}
+		},
+		{
+			module: "calendar",
+			position: "bottom_bar",
+			config: {
+				colored: false,
+				maximumNumberOfDays: 7,
+				maximumEntries: 1,
+				showLocation: false,
+				wrapEvents: false,
+				fetchInterval: 5 * 60 * 1000,
+				animationSpeed: 2000,
+				fade: false,
+				broadcastEvents: true,
+				calendars: [
+					{
+						url: "YOUR_GOOGLE_CALENDAR_PRIVATE_ICAL_URL",
+						symbol: "calendar"
+					}
+				]
+			}
+		},
+		// Page 2: News & Stats
+		{
+			module: "weather",
+			position: "top_left",
+			header: "Forecast",
+			config: {
+				weatherProvider: "openmeteo",
+				type: "forecast",
+				lat: 0.0000,
+				lon: 0.0000,
+				maxNumberOfDays: 5
+			}
+		},
+		{
+			module: "newsfeed",
+			position: "top_center",
+			config: {
+				feeds: [
+					{ title: "Wired AI", url: "https://www.wired.com/feed/tag/ai/latest/rss" },
+					{ title: "The Verge", url: "https://www.theverge.com/rss/index.xml" }
+				],
+				showSourceTitle: true,
+				showPublishDate: true,
+				showDescription: false,
+				maxNewsItems: 5
+			}
+		},
+		{
+			module: "MMM-SystemStats",
+			position: "top_right",
+			config: {
+				updateInterval: 10000,
+				align: "right",
+				useSyslog: false
+			}
+		},
+	]
+};
+
+/*************** DO NOT EDIT THE LINE BELOW ***************/
+if (typeof module !== "undefined") { module.exports = config; }

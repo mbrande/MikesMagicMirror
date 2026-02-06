@@ -1,55 +1,117 @@
-# ![MagicMirror²: The open source modular smart mirror platform.](.github/header.png)
+# MikesMagicMirror
 
-<p style="text-align: center">
-  <a href="https://choosealicense.com/licenses/mit">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
- </a>
- <img src="https://img.shields.io/github/actions/workflow/status/magicmirrororg/magicmirror/automated-tests.yaml" alt="GitHub Actions">
- <img src="https://img.shields.io/github/check-runs/magicmirrororg/magicmirror/master" alt="Build Status">
- <a href="https://github.com/MagicMirrorOrg/MagicMirror">
-  <img src="https://img.shields.io/github/stars/magicmirrororg/magicmirror?style=social" alt="GitHub Stars">
- </a>
-</p>
+A [MagicMirror](https://magicmirror.builders/) (v2.34.0) setup running on a Raspberry Pi with Ring camera integration, AI-powered object detection, and a two-page touchscreen dashboard.
 
-**MagicMirror²** is an open source modular smart mirror platform. With a growing list of installable modules, the **MagicMirror²** allows you to convert your hallway or bathroom mirror into your personal assistant. **MagicMirror²** is built by the creator of [the original MagicMirror](https://michaelteeuw.nl/tagged/magicmirror) with the incredible help of a [growing community of contributors](https://github.com/MagicMirrorOrg/MagicMirror/graphs/contributors).
+## Features
 
-MagicMirror² focuses on a modular plugin system and uses [Electron](https://www.electronjs.org/) as an application wrapper. So no more web server or browser installs necessary!
+- **Ring Camera Snapshots** — Live snapshots from Ring doorbells and cameras, refreshed periodically and on motion events
+- **AI Object Detection** — TFLite-based detection filters motion alerts to only show when a person, vehicle, or animal is in frame (SSD MobileNet v1 COCO)
+- **Two-Page Dashboard** — Swipe between a main dashboard (clock, cameras, weather, indoor climate, calendar) and an info page (forecast, news, system stats)
+- **Touch Control** — Tap to switch pages
+- **Remote Control** — Web-based remote management with monitor on/off
 
-![Animated demonstration of MagicMirror²](https://magicmirror.builders/img/demo.gif)
+## Modules
 
-## Documentation
+| Module | Description |
+|--------|-------------|
+| **MMM-RingSnapshot** | Ring camera snapshots with AI person/vehicle/animal detection |
+| **MMM-DHT-Sensor** | Indoor temperature and humidity from a DHT sensor |
+| **MMM-pages** | Page/slide navigation for grouping modules |
+| **MMM-page-indicator** | Visual indicator showing current page |
+| **MMM-Touch** | Touch gesture support (tap to change pages) |
+| **MMM-Remote-Control** | Web-based remote control interface |
+| **MMM-SystemStats** | CPU temp, RAM, disk, and uptime display |
+| **MMM-PowerButtons** | On-screen power/reboot/monitor controls |
 
-For the full documentation including **[installation instructions](https://docs.magicmirror.builders/getting-started/installation.html)**, please visit our dedicated documentation website: [https://docs.magicmirror.builders](https://docs.magicmirror.builders).
+## Setup
 
-## Links
+### 1. Install MagicMirror
 
-- Website: [https://magicmirror.builders](https://magicmirror.builders)
-- Documentation: [https://docs.magicmirror.builders](https://docs.magicmirror.builders)
-- Forum: [https://forum.magicmirror.builders](https://forum.magicmirror.builders)
-  - Technical discussions: <https://forum.magicmirror.builders/category/11/core-system>
-- Discord: [https://discord.gg/J5BAtvx](https://discord.gg/J5BAtvx)
-- Blog: [https://michaelteeuw.nl/tagged/magicmirror](https://michaelteeuw.nl/tagged/magicmirror)
-- Donations: [https://magicmirror.builders/#donate](https://magicmirror.builders/#donate)
+Follow the [official installation guide](https://docs.magicmirror.builders/getting-started/installation.html), or clone this repo:
 
-## Contributing Guidelines
+```bash
+git clone git@github.com:mbrande/MikesMagicMirror.git ~/MagicMirror
+cd ~/MagicMirror
+npm install
+```
 
-Contributions of all kinds are welcome, not only in the form of code but also with regards to
+### 2. Configure
 
-- bug reports
-- documentation
-- translations
+Copy the example config and fill in your values:
 
-For the full contribution guidelines, check out: [https://docs.magicmirror.builders/about/contributing.html](https://docs.magicmirror.builders/about/contributing.html)
+```bash
+cp config/config.js.example config/config.js
+```
 
-## Enjoying MagicMirror? Consider a donation!
+You'll need to set:
+- `apiKey` for MMM-Remote-Control
+- Google Calendar private iCal URL
+- Weather coordinates (lat/lon)
 
-MagicMirror² is Open Source and free. That doesn't mean we don't need any money.
+### 3. Ring Camera Setup
 
-Please consider a donation to help us cover the ongoing costs like webservers and email services.
-If we receive enough donations we might even be able to free up some working hours and spend some extra time improving the MagicMirror² core.
+```bash
+cd modules/MMM-RingSnapshot
+npm install
+```
 
-To donate, please follow [this](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G5D8E9MR5DTD2&source=url) link.
+Create a Ring refresh token ([instructions](https://github.com/dgreif/ring/wiki/Refresh-Tokens)) and save it:
 
-<p style="text-align: center">
-  <a href="https://forum.magicmirror.builders/topic/728/magicmirror-is-voted-number-1-in-the-magpi-top-50"><img src="https://magicmirror.builders/img/magpi-best-watermark-custom.png" width="150" alt="MagPi Top 50"></a>
-</p>
+```bash
+cp ring-token.json.example ring-token.json
+# Edit ring-token.json with your refresh token
+```
+
+### 4. AI Detection Setup
+
+Run the one-time setup script to install the TFLite model and Python dependencies:
+
+```bash
+cd modules/MMM-RingSnapshot
+bash setup_detection.sh
+```
+
+This creates a Python venv, installs `ai-edge-litert`, `pillow`, and `numpy`, and downloads the quantized SSD MobileNet v1 COCO model (~4MB).
+
+Test it manually:
+
+```bash
+venv/bin/python3 detect_person.py <image.jpg> 0.5
+```
+
+### 5. Run
+
+```bash
+# With PM2 (recommended):
+pm2 start npm --name magicmirror -- run start
+pm2 save
+
+# Or directly:
+npm run start
+```
+
+## AI Detection Config
+
+These options go in the `MMM-RingSnapshot` config block in `config/config.js`:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `personDetection` | `true` | Alert on person detection |
+| `personConfidence` | `0.5` | Person confidence threshold (0-1) |
+| `vehicleDetection` | `true` | Alert on vehicle detection (car, truck, bus, motorcycle, bicycle) |
+| `vehicleConfidence` | `0.5` | Vehicle confidence threshold (0-1) |
+| `animalDetection` | `true` | Alert on animal detection (cat, dog, bird, etc.) |
+| `animalConfidence` | `0.5` | Animal confidence threshold (0-1) |
+
+Detection is fail-open: if the model errors or times out, motion alerts pass through normally. Detection only runs once at the start of a motion event, not during the 5-second refresh cycle.
+
+## Hardware
+
+- Raspberry Pi 5
+- Ring Doorbell / Camera
+- DHT temperature/humidity sensor
+- HDMI touchscreen display
+
+## License
+
+MagicMirror is licensed under [MIT](LICENSE.md). Based on [MagicMirror](https://github.com/MagicMirrorOrg/MagicMirror) by MagicMirrorOrg.

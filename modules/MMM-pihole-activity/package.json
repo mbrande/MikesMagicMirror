@@ -1,0 +1,9 @@
+{
+	"name": "MMM-pihole-activity",
+	"version": "1.0.0",
+	"description": "MagicMirror module for real-time Pi-hole log activity via SSH",
+	"main": "node_helper.js",
+	"dependencies": {
+		"ssh2": "^1.16.0"
+	}
+}

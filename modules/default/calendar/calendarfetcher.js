@@ -71,7 +71,7 @@ class CalendarFetcher {
 	 */
 	getRequestOptions () {
 		const headers = { "User-Agent": getUserAgent() };
-		const options = { headers };
+		const options = { headers, signal: AbortSignal.timeout(60000) };
 
 		if (this.selfSignedCert) {
 			options.agent = new https.Agent({ rejectUnauthorized: false });

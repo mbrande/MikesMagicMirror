@@ -12,16 +12,16 @@ A [MagicMirror](https://magicmirror.builders/) (v2.34.0) setup running on a Rasp
 
 ## Modules
 
-| Module | Description |
-|--------|-------------|
-| **MMM-RingSnapshot** | Ring camera snapshots with AI person/vehicle/animal detection |
-| **MMM-DHT-Sensor** | Indoor temperature and humidity from a DHT sensor |
-| **MMM-pages** | Page/slide navigation for grouping modules |
-| **MMM-page-indicator** | Visual indicator showing current page |
-| **MMM-Touch** | Touch gesture support (tap to change pages) |
-| **MMM-Remote-Control** | Web-based remote control interface |
-| **MMM-SystemStats** | CPU temp, RAM, disk, and uptime display |
-| **MMM-PowerButtons** | On-screen power/reboot/monitor controls |
+| Module                 | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| **MMM-RingSnapshot**   | Ring camera snapshots with AI person/vehicle/animal detection |
+| **MMM-DHT-Sensor**     | Indoor temperature and humidity from a DHT sensor             |
+| **MMM-pages**          | Page/slide navigation for grouping modules                    |
+| **MMM-page-indicator** | Visual indicator showing current page                         |
+| **MMM-Touch**          | Touch gesture support (tap to change pages)                   |
+| **MMM-Remote-Control** | Web-based remote control interface                            |
+| **MMM-SystemStats**    | CPU temp, RAM, disk, and uptime display                       |
+| **MMM-PowerButtons**   | On-screen power/reboot/monitor controls                       |
 
 ## Setup
 
@@ -44,6 +44,7 @@ cp config/config.js.example config/config.js
 ```
 
 You'll need to set:
+
 - `apiKey` for MMM-Remote-Control
 - Google Calendar private iCal URL
 - Weather coordinates (lat/lon)
@@ -94,14 +95,14 @@ npm run start
 
 These options go in the `MMM-RingSnapshot` config block in `config/config.js`:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `personDetection` | `true` | Alert on person detection |
-| `personConfidence` | `0.5` | Person confidence threshold (0-1) |
-| `vehicleDetection` | `true` | Alert on vehicle detection (car, truck, bus, motorcycle, bicycle) |
-| `vehicleConfidence` | `0.5` | Vehicle confidence threshold (0-1) |
-| `animalDetection` | `true` | Alert on animal detection (cat, dog, bird, etc.) |
-| `animalConfidence` | `0.5` | Animal confidence threshold (0-1) |
+| Option              | Default | Description                                                       |
+| ------------------- | ------- | ----------------------------------------------------------------- |
+| `personDetection`   | `true`  | Alert on person detection                                         |
+| `personConfidence`  | `0.5`   | Person confidence threshold (0-1)                                 |
+| `vehicleDetection`  | `true`  | Alert on vehicle detection (car, truck, bus, motorcycle, bicycle) |
+| `vehicleConfidence` | `0.5`   | Vehicle confidence threshold (0-1)                                |
+| `animalDetection`   | `true`  | Alert on animal detection (cat, dog, bird, etc.)                  |
+| `animalConfidence`  | `0.5`   | Animal confidence threshold (0-1)                                 |
 
 Detection is fail-open: if the model errors or times out, motion alerts pass through normally. Detection only runs once at the start of a motion event, not during the 5-second refresh cycle.
 

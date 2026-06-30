@@ -6,3 +6,7 @@
 /coverage
 package-lock.json
 **.ics
+
+# Third-party modules are vendored — leave their formatting to their own upstreams
+/modules/*
+!/modules/default

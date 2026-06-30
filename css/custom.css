@@ -12,17 +12,18 @@
   --font-size-medium: 1.5rem;
   --font-size-large: 3rem;
   --font-size-xlarge: 3.5rem;
-
   --gap-body-top: 10px;
   --gap-body-right: 15px;
   --gap-body-bottom: 10px;
   --gap-body-left: 15px;
-
   --gap-modules: 5px;
 }
 
 body {
   line-height: 1.3;
+
+  /* Burn-in prevention: subtle pixel shift (see @keyframes pixel-shift) */
+  animation: pixel-shift 240s ease-in-out infinite;
 }
 
 header {
@@ -92,13 +93,23 @@ header {
 
 /* Burn-in prevention: subtle pixel shift every 60s */
 @keyframes pixel-shift {
-  0%   { transform: translate(0, 0); }
-  25%  { transform: translate(3px, -2px); }
-  50%  { transform: translate(-2px, 3px); }
-  75%  { transform: translate(2px, 2px); }
-  100% { transform: translate(0, 0); }
-}
+  0% {
+    transform: translate(0, 0);
+  }
 
-body {
-  animation: pixel-shift 240s ease-in-out infinite;
+  25% {
+    transform: translate(3px, -2px);
+  }
+
+  50% {
+    transform: translate(-2px, 3px);
+  }
+
+  75% {
+    transform: translate(2px, 2px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
 }

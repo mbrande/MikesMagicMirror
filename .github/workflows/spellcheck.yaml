@@ -4,6 +4,7 @@
 name: Run Spellcheck
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 0 27 3,6,9,12 *"
 

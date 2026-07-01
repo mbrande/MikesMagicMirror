@@ -19,7 +19,7 @@ concurrency:
 jobs:
   code-style-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -29,8 +29,13 @@ jobs:
           node-version: lts/*
           cache: "npm"
       - name: "Install dependencies"
+        # Linters need only the npm packages, not the Electron binary or the
+        # Playwright Chromium download (those big CDN fetches are slow/flaky and
+        # previously timed out this job). The test job below still installs them.
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
         run: |
-          node --run install-mm:dev
+          npm install --no-audit --no-fund --no-update-notifier
       - name: "Run linter tests"
         run: |
           node --run test:prettier
